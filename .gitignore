@@ -1,6 +1,6 @@
 # Build artifacts
-bin/
-obj/
+MongoDbApplication/bin/
+MongoDbApplication/obj/
 
 # User-specific files
 .vscode/
@@ -12,8 +12,8 @@ logs/
 *.log
 
 # Secrets (Never commit!)
-appsettings.json
-appsettings.Development.json
+MongoDbApplication/appsettings.json
+MongoDbApplication/appsettings.Development.json
 
 # IDE/Editor specific files
 *.vs/
