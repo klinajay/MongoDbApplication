@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Security.Cryptography;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
@@ -73,7 +74,7 @@ namespace MongoDbApplication.Repositories
                 updateDefinition.Add(Builders<Product>.Update.Set(p => p.ProductCategoryId, updates.ProductCategoryId));
 
             }
-            if (updates.ProductQuantity != null)
+            if (updates.ProductQuantity != Decimal.Zero)
             {
                 updateDefinition.Add(Builders<Product>.Update.Set(p => p.ProductQuantity, updates.ProductQuantity));
 
@@ -88,6 +89,13 @@ namespace MongoDbApplication.Repositories
             if (result.MatchedCount == 0) return -1;
             else return result.ModifiedCount;
         }
+        public async Task<long> UpdateProductPricesByName(string name , double price)
+        {
 
+            var update = Builders<Product>.Update
+                        .Inc("ProductPrice", price);
+            var result = await _databaseContext.Products.UpdateManyAsync(p => p.ProductName == name, update);
+            return result.ModifiedCount;
+        }
     }
 }

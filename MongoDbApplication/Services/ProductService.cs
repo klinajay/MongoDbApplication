@@ -35,5 +35,12 @@ namespace MongoDbApplication.Services
         {
             return await _productRepository.UpdateProductDetails(updates, _id); 
         }
+        public async Task<long> UpdateProductPricesByName(string name, double price)
+        {
+
+            return await _productRepository.UpdateProductPricesByName(name, price);
+
+
+        }
     }
 }

@@ -111,6 +111,32 @@ namespace MongoDbApplication.Controllers
                 return StatusCode(500, $"Error occured while processing your request; {exception.Message}");
             }
         }
+        [HttpPatch("update")]
+        public async Task<IActionResult> UpdateProductDetails([FromBody]string name,[FromBody] double price)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(name) || string.IsNullOrWhiteSpace(name)) 
+                    return UnprocessableEntity("Update data required.");
+                long modifiedProductCount = await productService.UpdateProductPricesByName(name, price);
+                if (modifiedProductCount != 0)
+                {
+                    return Ok($"{modifiedProductCount} Products updated successfully.");
+                }
+                else
+                {
+                    return NotFound($"Products not found with name {name}.");
+                }
+            }
+            catch (JsonException exception)
+            {
+                return BadRequest($"Invalid Json format: {exception.Message}");
+            }
+            catch (Exception exception)
+            {
+                return StatusCode(500, $"Error occured while processing your request; {exception.Message}");
+            }
+        }
 
     }
 }
