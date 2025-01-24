@@ -7,5 +7,7 @@ namespace MongoDbApplication.Contracts
     {
         public Task<bool> AddProduct(Product product);
         public Task<IEnumerable<Product>> GetAllProducts();
+        public Task<bool> ReplaceProduct(Product product , string _id);
+        public Task<long> UpdateProductDetails(ProductUpdates updates, string _id);
     }
 }

@@ -1,1 +1,19 @@
-.vs/ 
+# Build artifacts
+bin/
+obj/
+
+# User-specific files
+.vscode/
+*.user
+*.suo
+
+# Logs
+logs/
+*.log
+
+# Secrets (Never commit!)
+appsettings.json
+appsettings.Development.json
+
+# IDE/Editor specific files
+*.vs/

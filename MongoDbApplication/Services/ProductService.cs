@@ -1,4 +1,5 @@
-﻿using MongoDB.Driver;
+﻿using MongoDB.Bson;
+using MongoDB.Driver;
 using MongoDbApplication.Contracts;
 using MongoDbApplication.DB;
 using MongoDbApplication.Models;
@@ -24,6 +25,15 @@ namespace MongoDbApplication.Services
         {
             var products = await _productRepository.GetAllProducts();
             return products;
+        }
+        public async Task<bool> ReplaceProduct(Product product , string _id)
+        {
+            return await _productRepository.ReplaceProduct(product, _id);
+            
+        }
+        public async Task<long> UpdateProductDetails(ProductUpdates updates, string _id)
+        {
+            return await _productRepository.UpdateProductDetails(updates, _id); 
         }
     }
 }

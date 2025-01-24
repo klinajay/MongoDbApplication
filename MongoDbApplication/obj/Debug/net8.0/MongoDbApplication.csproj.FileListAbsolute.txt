@@ -47,3 +47,4 @@ C:\Users\Khan_Aja\source\MongoDbApplication\MongoDbApplication\obj\Debug\net8.0\
 C:\Users\Khan_Aja\source\MongoDbApplication\MongoDbApplication\obj\Debug\net8.0\MongoDbApplication.pdb
 C:\Users\Khan_Aja\source\MongoDbApplication\MongoDbApplication\obj\Debug\net8.0\MongoDbApplication.genruntimeconfig.cache
 C:\Users\Khan_Aja\source\MongoDbApplication\MongoDbApplication\obj\Debug\net8.0\ref\MongoDbApplication.dll
+C:\Users\Khan_Aja\source\MongoDbApplication\MongoDbApplication\obj\Debug\net8.0\MongoDbApplication.sourcelink.json
