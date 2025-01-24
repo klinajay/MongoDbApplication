@@ -1,7 +1,10 @@
 # Build artifacts
 bin/
 obj/
-
+MongoDbApplication/bin/
+MongoDbApplication/obj/
+Tests/bin/
+Tests/obj/
 # User-specific files
 .vscode/
 *.user
@@ -15,5 +18,9 @@ logs/
 appsettings.json
 appsettings.Development.json
 
+MongoDbApplication/appsettings.json
+MongoDbApplication/appsettings.Development.json
+Tests/appsettings.json
+Tests/appsettings.Development.json
 # IDE/Editor specific files
 *.vs/
