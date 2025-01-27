@@ -5,10 +5,14 @@ using MongoDB.Bson;
 using MongoDbApplication.Models;
 using MongoDbApplication.Services;
 
+
 namespace MongoDbApplication.Controllers
 {
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [Route("/api/products/")]
-    
+
     public class ProductController : Controller
     {
         public ProductService productService;
@@ -16,56 +20,73 @@ namespace MongoDbApplication.Controllers
         {
             this.productService = productService;
         }
-
+        /// <summary>
+        /// Adds a new product.
+        /// </summary>
+        /// <param name="product">The product to add.</param>
+        /// <returns>Returns 200 if successful, 422 if product data is invalid , 500 if server error occurs.</returns>
         [HttpPost]
-        public async Task<IActionResult> AddProduct()
+
+        public async Task<IActionResult> AddProduct([FromBody] Product product)
         {
             try
             {
-                var bodyContent = await new StreamReader(Request.Body).ReadToEndAsync();
+                //var bodyContent = await new StreamReader(Request.Body).ReadToEndAsync();
 
-                if (string.IsNullOrEmpty(bodyContent)) return UnprocessableEntity("Product data expected.");
+                if (product == null) return UnprocessableEntity("Product data expected.");
 
-                var product = JsonSerializer.Deserialize<Product>(bodyContent);
+                //product = JsonSerializer.Deserialize<Product>(bodyContent);
 
                 bool status = await productService.AddProduct(product);
                 if (status)
                     return Ok();
                 else
-                    return NotFound();
+                    return StatusCode(500, "Internal server error.");
             }
-            catch(JsonException exception)
+            catch (JsonException exception)
             {
                 return BadRequest($"Invalid Json format: {exception.Message}");
             }
-            catch(Exception exception)
+            catch (Exception exception)
             {
-                return StatusCode(500 , $"Error occured while processing your request; {exception.Message}");
+                return StatusCode(500, $"Error occured while processing your request; {exception.Message}");
             }
-            
-            
+
+
         }
 
+        /// <summary>
+        /// Get all products.
+        /// </summary>
+        /// <returns>200 if successfull , 422 if product data is invalid , 404 if product not found. </returns>
+        /// 
+
+        
         [HttpGet]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         public async Task<IActionResult> GetAllProducts()
         {
             var products = await productService.GetAllProducts();
             if (products == null) return Ok(204);
             return Ok(products);
         }
-
+        /// <summary>
+        /// Replaces a whole product with another product.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="updateProduct"></param>
+        /// <returns>200 if successfull , 422 if product data is invalid , 404 if product not found. </returns>
         [HttpPost("{id}/replace")]
-        public async Task<IActionResult> ReplaceProduct(string id)
+        [ProducesResponseType(StatusCodes.Status406NotAcceptable)]
+        public async Task<IActionResult> ReplaceProduct(string id, [FromBody] Product updateProduct)
         {
             try
             {
-                var bodyContent = await new StreamReader(Request.Body).ReadToEndAsync();
-                if (string.IsNullOrEmpty(bodyContent))
+                if (updateProduct == null)
                     return UnprocessableEntity("Update data required.");
 
-                var updateProduct = JsonSerializer.Deserialize<Product>(bodyContent);
-                
-                bool status = await productService.ReplaceProduct(updateProduct ,  id);
+
+                bool status = await productService.ReplaceProduct(updateProduct, id);
                 if (status)
                 {
                     return Ok("Product replaced successfully.");
@@ -84,9 +105,15 @@ namespace MongoDbApplication.Controllers
                 return StatusCode(500, $"Error occured while processing your request; {exception.StackTrace}");
             }
         }
-
+        /// <summary>
+        /// updates a single product.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="product"></param>
+        /// <returns>200 if successfull , 422 if product data is invalid , 404 if product not found.</returns>
         [HttpPatch("{id}/update")]
-        public async Task<IActionResult> UpdateProductDetails(string id , [FromBody] ProductUpdates product)
+        [ProducesResponseType(StatusCodes.Status406NotAcceptable)]
+        public async Task<IActionResult> UpdateProductDetails(string id, [FromBody] ProductUpdates product)
         {
             try
             {
@@ -111,12 +138,23 @@ namespace MongoDbApplication.Controllers
                 return StatusCode(500, $"Error occured while processing your request; {exception.Message}");
             }
         }
+        /// <summary>
+        /// updates thhe price of products those having the common names.
+        /// </summary>
+        /// <param name="data">Need to give name and price in form of dictionary</param>
+        /// <returns>200 if successfull , 422 if product data is invalid , 404 if product not found. </returns>
         [HttpPatch("update")]
-        public async Task<IActionResult> UpdateProductDetails([FromBody]string name,[FromBody] double price)
+        [ProducesResponseType(StatusCodes.Status406NotAcceptable)]
+        public async Task<IActionResult> UpdateProductDetails([FromBody] Dictionary<string, string> data)
         {
             try
             {
-                if (string.IsNullOrEmpty(name) || string.IsNullOrWhiteSpace(name)) 
+                if (!data.ContainsKey("name") || !data.ContainsKey("price"))
+                    return UnprocessableEntity("Update data required.");
+
+                string name = data["name"]?.ToString();
+                double price = Convert.ToDouble(data["price"]);
+                if (string.IsNullOrEmpty(name) || string.IsNullOrWhiteSpace(name))
                     return UnprocessableEntity("Update data required.");
                 long modifiedProductCount = await productService.UpdateProductPricesByName(name, price);
                 if (modifiedProductCount != 0)
