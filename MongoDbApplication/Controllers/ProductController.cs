@@ -26,7 +26,8 @@ namespace MongoDbApplication.Controllers
         /// <param name="product">The product to add.</param>
         /// <returns>Returns 200 if successful, 422 if product data is invalid , 500 if server error occurs.</returns>
         [HttpPost]
-
+        [Consumes("application/xml","application/json")]
+        
         public async Task<IActionResult> AddProduct([FromBody] Product product)
         {
             try
@@ -63,6 +64,7 @@ namespace MongoDbApplication.Controllers
 
         
         [HttpGet]
+        [Produces("application/xml")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         public async Task<IActionResult> GetAllProducts()
         {
