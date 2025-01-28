@@ -50,7 +50,7 @@ namespace MongoDbApplication.Repositories
             if(existingProduct == null) { return -1; }
 
             var updateDefinition = new List<UpdateDefinition<Product>>();
-            if(updates.ProductName != null)
+            if (!string.IsNullOrEmpty(updates.ProductName))
             {
                 updateDefinition.Add(Builders<Product>.Update.Set(p => p.ProductName, updates.ProductName));
             }
@@ -59,17 +59,17 @@ namespace MongoDbApplication.Repositories
                 updateDefinition.Add(Builders<Product>.Update.Set(p => p.ProductPrice, updates.ProductPrice));
                 
             }
-            if (updates.Description != null)
+            if (!string.IsNullOrEmpty(updates.Description))
             {
                 updateDefinition.Add(Builders<Product>.Update.Set(p => p.Description, updates.Description));
 
             }
-            if (updates.SupplierId != null)
+            if (!string.IsNullOrEmpty(updates.SupplierId))
             {
                 updateDefinition.Add(Builders<Product>.Update.Set(p => p.SupplierId, updates.SupplierId));
 
             }
-            if (updates.ProductCategoryId != null)
+            if (!string.IsNullOrEmpty(updates.ProductCategoryId))
             {
                 updateDefinition.Add(Builders<Product>.Update.Set(p => p.ProductCategoryId, updates.ProductCategoryId));
 
@@ -79,7 +79,7 @@ namespace MongoDbApplication.Repositories
                 updateDefinition.Add(Builders<Product>.Update.Set(p => p.ProductQuantity, updates.ProductQuantity));
 
             }
-            if(updates.ImageUrl != null)
+            if(!string.IsNullOrEmpty(updates.ImageUrl))
             {
                 updateDefinition.Add(Builders<Product>.Update.Set(p => p.ImageUrl, updates.ImageUrl));
 
@@ -96,6 +96,17 @@ namespace MongoDbApplication.Repositories
                         .Inc("ProductPrice", price);
             var result = await _databaseContext.Products.UpdateManyAsync(p => p.ProductName == name, update);
             return result.ModifiedCount;
+        }
+        public async Task<Product> DeleteProduct(string _id)
+        {
+            var product = await _databaseContext.Products.FindOneAndDeleteAsync(p => p._id == _id);
+            return product;
+        }
+        public async Task<long> DeleteProductsHavingQuantityZero()
+        {
+             
+            var deleteResult = await _databaseContext.Products.DeleteManyAsync(product => product.ProductQuantity == 0);
+            return deleteResult.DeletedCount;
         }
     }
 }

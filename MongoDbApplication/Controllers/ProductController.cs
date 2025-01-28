@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDbApplication.Models;
 using MongoDbApplication.Services;
+using Swashbuckle.AspNetCore.Annotations;
 
 
 namespace MongoDbApplication.Controllers
@@ -11,7 +12,8 @@ namespace MongoDbApplication.Controllers
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [Route("/api/products/")]
+    
+    [Route("/api/products")]
 
     public class ProductController : Controller
     {
@@ -27,7 +29,7 @@ namespace MongoDbApplication.Controllers
         /// <returns>Returns 200 if successful, 422 if product data is invalid , 500 if server error occurs.</returns>
         [HttpPost]
         [Consumes("application/xml","application/json")]
-        
+        [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
         public async Task<IActionResult> AddProduct([FromBody] Product product)
         {
             try
@@ -61,8 +63,6 @@ namespace MongoDbApplication.Controllers
         /// </summary>
         /// <returns>200 if successfull , 422 if product data is invalid , 404 if product not found. </returns>
         /// 
-
-        
         [HttpGet]
         [Produces("application/xml")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -78,7 +78,7 @@ namespace MongoDbApplication.Controllers
         /// <param name="id"></param>
         /// <param name="updateProduct"></param>
         /// <returns>200 if successfull , 422 if product data is invalid , 404 if product not found. </returns>
-        [HttpPost("{id}/replace")]
+        [HttpPost("/{id}/replace")]
         [ProducesResponseType(StatusCodes.Status406NotAcceptable)]
         public async Task<IActionResult> ReplaceProduct(string id, [FromBody] Product updateProduct)
         {
@@ -113,7 +113,7 @@ namespace MongoDbApplication.Controllers
         /// <param name="id"></param>
         /// <param name="product"></param>
         /// <returns>200 if successfull , 422 if product data is invalid , 404 if product not found.</returns>
-        [HttpPatch("{id}/update")]
+        [HttpPatch("/{id}/update")]
         [ProducesResponseType(StatusCodes.Status406NotAcceptable)]
         public async Task<IActionResult> UpdateProductDetails(string id, [FromBody] ProductUpdates product)
         {
@@ -145,7 +145,7 @@ namespace MongoDbApplication.Controllers
         /// </summary>
         /// <param name="data">Need to give name and price in form of dictionary</param>
         /// <returns>200 if successfull , 422 if product data is invalid , 404 if product not found. </returns>
-        [HttpPatch("update")]
+        [HttpPatch("/update")]
         [ProducesResponseType(StatusCodes.Status406NotAcceptable)]
         public async Task<IActionResult> UpdateProductDetails([FromBody] Dictionary<string, string> data)
         {
@@ -177,6 +177,52 @@ namespace MongoDbApplication.Controllers
                 return StatusCode(500, $"Error occured while processing your request; {exception.Message}");
             }
         }
-
+        /// <summary>
+        /// Deletes a single product.
+        /// </summary>
+        /// <param name="id">unique id of product.</param>
+        /// <returns></returns>
+        [HttpDelete("/{id}")]
+        
+        public async Task<IActionResult> DeleteProduct(string id)
+        {
+            try
+            {
+                var deletedProduct = await productService.DeleteProduct(id);
+                if (deletedProduct != null)
+                {
+                    return Ok(deletedProduct);
+                }
+                else
+                {
+                    return NotFound("Product not found.");
+                }
+            }
+            catch (Exception exception)
+            {
+                return StatusCode(500, $"Error occured while processing your request; {exception.Message}");
+            }
+        }
+        /// <summary>
+        /// Remove out of stock products (cleanup).
+        /// </summary>
+        /// <returns></returns>
+        [HttpDelete("/cleanup")]
+        public async Task<IActionResult> DeleteProductsHavingQuantityZero()
+        {
+            try
+            {
+                long deletedProductsCount = await productService.DeleteProductHavingPriceZero();
+                if (deletedProductsCount == 0)
+                    return Ok("All products are available, no need for cleanup.");
+                else
+                    return Ok($"{deletedProductsCount} products removed from inventory.");
+            }
+            catch(Exception exception)
+            {
+                return StatusCode(500, $"Error occured while processing your request; {exception.Message}");
+            }
+            
+        }
     }
 }

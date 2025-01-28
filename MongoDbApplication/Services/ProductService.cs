@@ -42,5 +42,14 @@ namespace MongoDbApplication.Services
 
 
         }
+        public async Task<Product> DeleteProduct(string _id)
+        {
+            return await _productRepository.DeleteProduct(_id);
+        }
+        public async Task<long> DeleteProductHavingPriceZero( )
+        {
+            return await _productRepository.DeleteProductsHavingQuantityZero();
+        }
+
     }
 }

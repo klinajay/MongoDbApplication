@@ -1,4 +1,6 @@
 using System.Reflection;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDbApplication.Contracts;
 using MongoDbApplication.DB;
@@ -11,6 +13,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews(options =>
 {
     options.ReturnHttpNotAcceptable = true;
+}).AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
 }).AddXmlDataContractSerializerFormatters();
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 builder.Services.AddSingleton<IProductRepository, ProductRepository>();
@@ -29,9 +34,9 @@ builder.Services.AddSwaggerGen(options =>
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     options.IncludeXmlComments(xmlPath);
-    
-    
-    
+
+
+
 });
 var app = builder.Build();
 
@@ -41,7 +46,7 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Home/Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
-    
+
 }
 app.UseSwagger();
 app.UseSwaggerUI(option =>
