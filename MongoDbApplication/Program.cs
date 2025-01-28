@@ -1,12 +1,15 @@
-using System.Reflection;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using Asp.Versioning;
+using Asp.Versioning.ApiExplorer;
+using Microsoft.OpenApi.Models;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDbApplication.Contracts;
 using MongoDbApplication.DB;
 using MongoDbApplication.Repositories;
 using MongoDbApplication.Services;
-//using 	Microsoft.AspNetCore.OpenApi
+using System.Text.Json.Serialization;
+//using Microsoft.AspNetCore.Mvc.ApiExplorer;
+//using Microsoft.AspNetCore.Mvc.Versioning; // Add this using directive
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -17,48 +20,68 @@ builder.Services.AddControllersWithViews(options =>
 {
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
 }).AddXmlDataContractSerializerFormatters();
+
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 builder.Services.AddSingleton<IProductRepository, ProductRepository>();
 builder.Services.AddSingleton<DatabaseContext>();
 builder.Services.AddSingleton<ProductService>();
+
 builder.Services.AddEndpointsApiExplorer();
+
+builder.Services.AddApiVersioning(options =>
+{
+    options.ReportApiVersions = true;
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+}).AddApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";  // v1, v2, etc.
+    options.SubstituteApiVersionInUrl = true;
+});
+
+// Register Swagger services
 builder.Services.AddSwaggerGen(options =>
 {
-    options.SwaggerDoc("InventoryOpenAPISpecification",
+    var provider = builder.Services.BuildServiceProvider().GetRequiredService<IApiVersionDescriptionProvider>();
 
-    new Microsoft.OpenApi.Models.OpenApiInfo()
+    foreach (var description in provider.ApiVersionDescriptions)
     {
-        Title = "InventoryManager Api",
-        Version = "v1"
-    });
-    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-    options.IncludeXmlComments(xmlPath);
-
-
-
+        options.SwaggerDoc(description.GroupName, new OpenApiInfo
+        {
+            Title = $"InventoryManager API {description.ApiVersion}",
+            Version = description.ApiVersion.ToString(),
+            Description = description.IsDeprecated ? "This API version is deprecated." : "Latest version."
+        });
+    }
 });
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
-
 }
+
 app.UseSwagger();
-app.UseSwaggerUI(option =>
+
+// Use the API version descriptions to configure Swagger UI
+var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+app.UseSwaggerUI(options =>
 {
-    option.SwaggerEndpoint("/swagger/InventoryOpenAPISpecification/swagger.json", "InventoryManager");
-    option.RoutePrefix = "";
+    foreach (var description in provider.ApiVersionDescriptions)
+    {
+        options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName.ToUpperInvariant());
+    }
+    options.RoutePrefix = "";
 });
+
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-
 app.UseAuthorization();
 
 app.MapControllerRoute(

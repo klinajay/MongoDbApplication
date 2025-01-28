@@ -1,27 +1,22 @@
-﻿using System.Security.Cryptography;
-using System.Text.Json;
+﻿using System.Text.Json;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Bson;
 using MongoDbApplication.Models;
 using MongoDbApplication.Services;
-using Swashbuckle.AspNetCore.Annotations;
-
 
 namespace MongoDbApplication.Controllers
 {
+    [ApiController]
+    [ApiVersion("2.0")]
+    [Route("api/v{version:apiVersion}/products")]
+    
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ApiController]
-    [ApiVersion("1.0")]
-    [Route("api/v{version:apiVersion}/products")]
-    
-
-    public class ProductController : Controller
+    public class ProductControllerV2 : Controller
     {
         public ProductService productService;
-        public ProductController(ProductService productService)
+        public ProductControllerV2(ProductService productService)
         {
             this.productService = productService;
         }
@@ -31,7 +26,7 @@ namespace MongoDbApplication.Controllers
         /// <param name="product">The product to add.</param>
         /// <returns>Returns 200 if successful, 422 if product data is invalid , 500 if server error occurs.</returns>
         [HttpPost]
-        [Consumes("application/xml","application/json")]
+        [Consumes("application/xml", "application/json")]
         [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
         public async Task<IActionResult> AddProduct([FromBody] Product product)
         {
@@ -74,41 +69,6 @@ namespace MongoDbApplication.Controllers
             var products = await productService.GetAllProducts();
             if (products == null) return Ok(204);
             return Ok(products);
-        }
-        /// <summary>
-        /// Replaces a whole product with another product.
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="updateProduct"></param>
-        /// <returns>200 if successfull , 422 if product data is invalid , 404 if product not found. </returns>
-        [HttpPost("/{id}/replace")]
-        [ProducesResponseType(StatusCodes.Status406NotAcceptable)]
-        public async Task<IActionResult> ReplaceProduct(string id, [FromBody] Product updateProduct)
-        {
-            try
-            {
-                if (updateProduct == null)
-                    return UnprocessableEntity("Update data required.");
-
-
-                bool status = await productService.ReplaceProduct(updateProduct, id);
-                if (status)
-                {
-                    return Ok("Product replaced successfully.");
-                }
-                else
-                {
-                    return NotFound("Product not found.");
-                }
-            }
-            catch (JsonException exception)
-            {
-                return BadRequest($"Invalid Json format: {exception.Message}");
-            }
-            catch (Exception exception)
-            {
-                return StatusCode(500, $"Error occured while processing your request; {exception.StackTrace}");
-            }
         }
         /// <summary>
         /// updates a single product.
@@ -186,7 +146,7 @@ namespace MongoDbApplication.Controllers
         /// <param name="id">unique id of product.</param>
         /// <returns></returns>
         [HttpDelete("/{id}")]
-        
+
         public async Task<IActionResult> DeleteProduct(string id)
         {
             try
@@ -221,11 +181,11 @@ namespace MongoDbApplication.Controllers
                 else
                     return Ok($"{deletedProductsCount} products removed from inventory.");
             }
-            catch(Exception exception)
+            catch (Exception exception)
             {
                 return StatusCode(500, $"Error occured while processing your request; {exception.Message}");
             }
-            
+
         }
     }
 }
